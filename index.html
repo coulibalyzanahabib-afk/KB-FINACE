@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0b0d14"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg"/>
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg"/>
+  <meta name="apple-mobile-web-app-title" content="KB Finance"/>
+  <meta name="application-name" content="KB Finance"/>
+  <meta name="msapplication-TileColor" content="#0b0d14"/>
+  <meta name="msapplication-TileImage" content="/icons/icon-144.svg"/>
+<title>KB Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+:root {
+  --ink:   #0b0d14;
+  --s0:    #10131f;
+  --s1:    #161926;
+  --s2:    #1c2032;
+  --s3:    #22283c;
+  --bd:    #252c42;
+  --bd2:   #2e3852;
+
+  --iv:    #e8e0cc;
+  --iv2:   #d4c9a8;
+  --ivg:   rgba(232,224,204,.12);
+
+  --em:    #28d98e;
+  --emb:   rgba(40,217,142,.08);
+  --co:    #e8564f;
+  --cob:   rgba(232,86,79,.08);
+  --sky:   #5a8ff0;
+  --skyb:  rgba(90,143,240,.08);
+  --am:    #f0a030;
+  --amb:   rgba(240,160,48,.09);
+
+  --tx:    #e0e8f8;
+  --tx2:   #7a8aaa;
+  --tx3:   #3e4a64;
+
+  --r1: 10px; --r2: 16px; --r3: 22px; --r4: 32px;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --f: 'Sora', sans-serif;
+  --m: 'DM Mono', monospace;
+  --nav: 72px;
+  --top: 54px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+/* ═══════════════════════════════════════
+   RESET
+═══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-text-size-adjust: 100%; height: 100%; }
+body {
+  font-family: var(--f);
+  background: var(--ink);
+  color: var(--tx);
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+input, select, textarea { user-select: text; -webkit-user-select: text; }
+::-webkit-scrollbar { display: none; }
+
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+.app {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--ink);
+  padding-top: var(--safe-t);
+}
+
+/* ── STATUS BAR SPACER ── */
+.status-bar {
+  height: var(--safe-t);
+  background: var(--s0);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar {
+  height: var(--top);
+  background: var(--s0);
+  border-bottom: 1px solid var(--bd);
+  display: flex; align-items: center;
+  padding: 0 18px;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+.tb-logo {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--iv);
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 12px; color: var(--ink);
+  flex-shrink: 0;
+}
+.tb-title { flex: 1; font-size: 16px; font-weight: 600; color: var(--tx); }
+.tb-month {
+  font-family: var(--m); font-size: 11px; color: var(--tx3);
+  background: var(--s2); border: 1px solid var(--bd);
+  border-radius: 99px; padding: 3px 10px;
+}
+.tb-action {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--s2); border: 1px solid var(--bd);
+  display: grid; place-items: center;
+  cursor: pointer; font-size: 16px;
+  transition: background .15s;
+}
+.tb-action:active { background: var(--s3); }
+
+/* ═══════════════════════════════════════
+   SCROLL CONTAINER
+═══════════════════════════════════════ */
+.pages {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav) + var(--safe-b) + 16px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity .22s var(--ease), transform .22s var(--ease);
+}
+.page.on {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════
+   ALERT BANNER
+═══════════════════════════════════════ */
+.alert-zone { padding: 10px 16px 0; display: flex; flex-direction: column; gap: 8px; }
+.alert {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 13px; border-radius: var(--r2);
+  font-size: 12.5px; line-height: 1.5;
+  border: 1px solid transparent;
+  animation: slideDown .25s ease;
+}
+.aw { background: var(--amb); border-color: rgba(240,160,48,.2); color: var(--am); }
+.ad { background: var(--cob); border-color: rgba(232,86,79,.2); color: var(--co); }
+.ak { background: var(--emb); border-color: rgba(40,217,142,.2); color: var(--em); }
+.acls { margin-left: auto; background: none; border: none; color: inherit; opacity: .5; cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 0 2px; }
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════ */
+
+/* Hero Balance Card */
+.hero {
+  margin: 14px 16px 0;
+  background: linear-gradient(135deg, var(--s2) 0%, #1a1f34 100%);
+  border: 1px solid var(--bd);
+  border-radius: var(--r3);
+  padding: 22px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(232,224,204,.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.hero-label { font-size: 11px; font-weight: 500; color: var(--tx3); letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px; }
+.hero-value { font-family: var(--m); font-size: 32px; font-weight: 500; color: var(--iv); line-height: 1.1; margin-bottom: 6px; }
+.hero-sub { font-size: 12px; color: var(--tx2); }
+.hero-pills { display: flex; gap: 8px; margin-top: 18px; }
+.pill {
+  flex: 1; padding: 10px 12px; border-radius: var(--r2);
+  background: rgba(255,255,255,.04); border: 1px solid var(--bd);
+}
+.pill-lbl { font-size: 10px; color: var(--tx3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+.pill-val { font-family: var(--m); font-size: 13px; font-weight: 500; }
+.pill-val.inc { color: var(--em); }
+.pill-val.exp { color: var(--co); }
+
+/* Section header */
+.sh { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px 10px; }
+.sh-title { font-size: 13px; font-weight: 600; color: var(--tx2); text-transform: uppercase; letter-spacing: .6px; }
+.sh-link { font-size: 12.5px; color: var(--iv); font-weight: 500; cursor: pointer; }
+
+/* Stat Row */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 4px; }
+.stat {
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: var(--r2); padding: 16px 14px;
+  position: relative; overflow: hidden;
+}
+.stat::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat-sav::before { background: linear-gradient(90deg, var(--sky), #3a70d0); }
+.stat-tx::before  { background: linear-gradient(90deg, var(--am), #d08010); }
+.stat-lbl { font-size: 10.5px; color: var(--tx3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .4px; }
+.stat-val { font-family: var(--m); font-size: 15px; font-weight: 500; color: var(--tx); }
+.stat-val.sky { color: var(--sky); }
+.stat-val.am  { color: var(--am); }
+
+/* TX items (mini) */
+.tx-mini { padding: 0 16px; display: flex; flex-direction: column; gap: 6px; }
+.txi {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: var(--r2); padding: 12px 14px;
+  animation: fadeUp .2s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+.txi-ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+.ii { background: var(--emb); }
+.ie { background: var(--cob); }
+.txi-body { flex: 1; min-width: 0; }
+.txi-cat { font-size: 13.5px; font-weight: 500; color: var(--tx); text-transform: capitalize; }
+.txi-note { font-size: 11.5px; color: var(--tx3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txi-right { text-align: right; flex-shrink: 0; }
+.txi-amt { font-family: var(--m); font-size: 14px; font-weight: 500; }
+.txi-amt.inc { color: var(--em); }
+.txi-amt.exp { color: var(--co); }
+.txi-dt { font-family: var(--m); font-size: 10px; color: var(--tx3); margin-top: 2px; }
+.txi-acts { display: flex; gap: 6px; margin-left: 8px; flex-shrink: 0; }
+.txi-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--s2); border: 1px solid var(--bd);
+  display: grid; place-items: center;
+  cursor: pointer; font-size: 12px; color: var(--tx3);
+  transition: all .15s; flex-shrink: 0;
+}
+.txi-btn:active { background: var(--s3); }
+.txi-btn.del:active { background: var(--cob); color: var(--co); }
+
+/* Mini chart */
+.chart-box { margin: 0 16px; background: var(--s1); border: 1px solid var(--bd); border-radius: var(--r2); padding: 16px 14px; }
+.chart-box canvas { height: 160px !important; }
+
+.empty-box { text-align: center; padding: 30px 20px; color: var(--tx3); font-size: 13px; }
+
+/* ═══════════════════════════════════════
+   FAB — FLOATING ACTION BUTTON
+═══════════════════════════════════════ */
+.fab {
+  position: fixed;
+  bottom: calc(var(--nav) + var(--safe-b) + 16px);
+  right: 18px;
+  width: 52px; height: 52px;
+  background: var(--iv);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 24px; color: var(--ink);
+  box-shadow: 0 6px 24px rgba(232,224,204,.25);
+  cursor: pointer;
+  z-index: 60;
+  border: none;
+  transition: all .2s var(--ease);
+}
+.fab:active { transform: scale(.93); }
+
+/* ═══════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════ */
+.bnav {
+  height: calc(var(--nav) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  background: var(--s0);
+  border-top: 1px solid var(--bd);
+  display: flex;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.nb {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  background: none; border: none;
+  color: var(--tx3); font-family: var(--f); font-size: 10px;
+  cursor: pointer; transition: color .18s;
+  padding: 8px 0;
+}
+.nb .ni { font-size: 20px; line-height: 1; transition: transform .18s; }
+.nb.on { color: var(--iv); }
+.nb.on .ni { transform: translateY(-1px); }
+
+/* ═══════════════════════════════════════
+   TRANSACTIONS PAGE
+═══════════════════════════════════════ */
+.filter-chips { display: flex; gap: 8px; padding: 12px 16px 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.chip {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 99px;
+  background: var(--s2); border: 1px solid var(--bd);
+  color: var(--tx2); font-family: var(--f); font-size: 12.5px;
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.chip.on { background: var(--iv); color: var(--ink); border-color: var(--iv); font-weight: 600; }
+.tx-full { padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; }
+.month-sep { font-size: 11px; font-weight: 600; color: var(--tx3); letter-spacing: .6px; text-transform: uppercase; padding: 12px 0 4px; }
+
+/* ═══════════════════════════════════════
+   ANALYSES PAGE
+═══════════════════════════════════════ */
+.chart-card { margin: 12px 16px 0; background: var(--s1); border: 1px solid var(--bd); border-radius: var(--r2); padding: 18px 16px; }
+.chart-card canvas { max-height: 220px; }
+.chart-label { font-size: 12px; font-weight: 500; color: var(--tx2); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; }
+
+/* ═══════════════════════════════════════
+   EPARGNE PAGE
+═══════════════════════════════════════ */
+.sav-hero {
+  margin: 14px 16px 0;
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: var(--r3); padding: 20px 18px;
+}
+.sav-hero-top { display: flex; justify-content: space-between; margin-bottom: 14px; }
+.sav-hero-lbl { font-size: 12px; color: var(--tx3); margin-bottom: 4px; }
+.sav-hero-val { font-family: var(--m); font-size: 24px; font-weight: 500; color: var(--sky); }
+.sav-hero-pct { font-family: var(--m); font-size: 28px; font-weight: 500; color: var(--iv); }
+.big-bar { height: 8px; background: var(--s3); border-radius: 99px; overflow: hidden; }
+.big-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--sky), var(--iv)); transition: width .8s var(--ease); }
+.big-fill.done { background: linear-gradient(90deg, var(--em), #1abb70); }
+
+.goal-card {
+  margin: 10px 16px 0;
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: var(--r2); padding: 18px 16px;
+  animation: fadeUp .25s ease;
+}
+.gc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.gc-name { font-size: 14px; font-weight: 600; color: var(--tx); }
+.gc-del { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 14px; padding: 2px; }
+.gc-amts { font-family: var(--m); font-size: 12px; color: var(--tx3); margin-bottom: 10px; }
+.sbar { height: 5px; background: var(--s3); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+.sfill { height: 100%; border-radius: 99px; background: var(--iv); transition: width .7s var(--ease); }
+.sfill.done { background: var(--em); }
+.gc-foot { display: flex; justify-content: space-between; align-items: center; }
+.gc-dl { font-size: 11px; color: var(--tx3); }
+.gc-pct { font-family: var(--m); font-size: 17px; font-weight: 500; color: var(--iv); }
+.gc-msg { font-size: 12px; color: var(--iv); font-style: italic; margin-top: 8px; }
+
+/* ═══════════════════════════════════════
+   ASSISTANT / CHAT PAGE
+═══════════════════════════════════════ */
+.chat-container {
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+.chat-msgs { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.bubble { display: flex; gap: 8px; max-width: 88%; animation: fadeUp .2s ease; }
+.bkb { align-self: flex-start; }
+.bu  { align-self: flex-end; flex-direction: row-reverse; }
+.bav { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.bkb .bav { background: var(--iv); color: var(--ink); }
+.bu  .bav  { background: var(--s3); border: 1px solid var(--bd2); color: var(--tx2); }
+.bcont {
+  background: var(--s1); border: 1px solid var(--bd);
+  border-radius: 16px; padding: 10px 14px;
+  font-size: 13.5px; line-height: 1.6; color: var(--tx);
+}
+.bu .bcont { background: var(--ivg); border-color: rgba(232,224,204,.14); }
+.bcont p { margin-bottom: 4px; }
+.bcont p:last-child { margin: 0; }
+.bcont ul { padding-left: 16px; }
+.bcont li { margin-bottom: 3px; }
+.bcont em { color: var(--iv); font-style: normal; }
+.dots span {
+  display: inline-block; width: 5px; height: 5px;
+  background: var(--tx3); border-radius: 50%; margin: 0 2px;
+  animation: bop 1.2s infinite;
+}
+.dots span:nth-child(2) { animation-delay: .2s; }
+.dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes bop { 0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-5px);} }
+.chat-bar {
+  padding: 10px 14px;
+  padding-bottom: calc(10px + var(--safe-b));
+  background: var(--s0); border-top: 1px solid var(--bd);
+  display: flex; gap: 8px;
+  flex-shrink: 0;
+}
+.chat-in {
+  flex: 1; background: var(--s2); border: 1px solid var(--bd);
+  border-radius: 99px; color: var(--tx);
+  font-family: var(--f); font-size: 14px;
+  padding: 11px 18px; outline: none;
+  transition: border-color .18s;
+}
+.chat-in::placeholder { color: var(--tx3); }
+.chat-in:focus { border-color: var(--iv); }
+.chat-send {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--iv); color: var(--ink);
+  border: none; display: grid; place-items: center;
+  font-size: 18px; cursor: pointer;
+  transition: all .18s; flex-shrink: 0;
+}
+.chat-send:active { transform: scale(.92); }
+
+/* ═══════════════════════════════════════
+   ADD SHEET (Modale style bottom sheet)
+═══════════════════════════════════════ */
+.sheet-bg {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 200; display: none; align-items: flex-end;
+}
+.sheet-bg.open { display: flex; }
+.sheet {
+  width: 100%; background: var(--s1);
+  border-radius: var(--r4) var(--r4) 0 0;
+  padding: 0 0 calc(20px + var(--safe-b));
+  animation: slideUp .28s var(--ease);
+  max-height: 92dvh;
+  overflow-y: auto;
+}
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.sheet-handle { width: 36px; height: 4px; background: var(--bd2); border-radius: 99px; margin: 12px auto 0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; }
+.sheet-title { font-size: 17px; font-weight: 600; color: var(--tx); }
+.sheet-close { width: 30px; height: 30px; border-radius: 50%; background: var(--s2); border: 1px solid var(--bd); display: grid; place-items: center; cursor: pointer; font-size: 14px; color: var(--tx2); }
+.sheet-body { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* Type selector */
+.type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.type-btn {
+  padding: 14px; border-radius: var(--r2);
+  background: var(--s2); border: 1.5px solid var(--bd);
+  color: var(--tx2); font-family: var(--f); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: all .18s; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.type-btn.ti { background: var(--emb); border-color: rgba(40,217,142,.35); color: var(--em); }
+.type-btn.te { background: var(--cob); border-color: rgba(232,86,79,.35); color: var(--co); }
+.fi, .fs {
+  background: var(--s2); border: 1.5px solid var(--bd);
+  border-radius: var(--r1); color: var(--tx);
+  font-family: var(--f); font-size: 14px;
+  padding: 13px 14px; outline: none; width: 100%;
+  transition: border-color .18s;
+  -webkit-appearance: none; appearance: none;
+}
+.fi::placeholder { color: var(--tx3); }
+.fi:focus, .fs:focus { border-color: var(--iv); }
+.fs option { background: var(--s2); }
+.fi[type=date], .fi[type=month] { color-scheme: dark; }
+.fi-big {
+  font-size: 28px; font-family: var(--m); font-weight: 500;
+  text-align: center; padding: 16px; color: var(--iv);
+  background: var(--s2); border: 1.5px solid var(--bd);
+  border-radius: var(--r2); width: 100%; outline: none;
+  transition: border-color .18s;
+}
+.fi-big::placeholder { color: var(--tx3); font-size: 20px; }
+.fi-big:focus { border-color: var(--iv); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-sheet {
+  background: var(--iv); color: var(--ink);
+  border: none; border-radius: var(--r2);
+  padding: 15px; font-family: var(--f);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; width: 100%; margin-top: 4px;
+  transition: all .18s;
+}
+.btn-sheet:active { transform: scale(.98); }
+
+/* ── GOAL SHEET ── */
+.goal-sheet-body { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── EDIT SHEET ── */
+.edit-sheet-body { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: calc(var(--nav) + var(--safe-b) + 70px);
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--s2); border: 1px solid var(--bd2);
+  border-radius: 99px; padding: 10px 20px;
+  font-size: 13.5px; color: var(--tx);
+  white-space: nowrap;
+  z-index: 300; opacity: 0;
+  transition: all .3s var(--ease);
+  box-shadow: 0 6px 24px rgba(0,0,0,.4);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok  { border-left: 3px solid var(--em); }
+.toast.err { border-left: 3px solid var(--co); }
+.toast.inf { border-left: 3px solid var(--iv); }
+
+/* ═══════════════════════════════════════
+   EXPORT CSV
+═══════════════════════════════════════ */
+.export-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 0;
+  gap: 10px;
+}
+.export-info {
+  font-size: 12px; color: var(--tx3);
+  font-family: var(--m);
+}
+.export-info span { color: var(--tx2); font-weight: 500; }
+.btn-export {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--emb); border: 1.5px solid rgba(40,217,142,.3);
+  border-radius: 99px; color: var(--em);
+  font-family: var(--f); font-size: 12.5px; font-weight: 600;
+  padding: 8px 16px; cursor: pointer;
+  transition: all .18s var(--ease);
+  white-space: nowrap; flex-shrink: 0;
+}
+.btn-export:active { transform: scale(.95); background: rgba(40,217,142,.14); }
+.btn-export .ex-ic { font-size: 14px; }
+
+/* Export options sheet */
+.export-opts {
+  display: grid; gap: 10px; padding: 0 20px 4px;
+}
+.export-opt {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--s2); border: 1.5px solid var(--bd);
+  border-radius: var(--r2); padding: 15px 16px;
+  cursor: pointer; transition: all .18s;
+}
+.export-opt:active { background: var(--s3); border-color: var(--bd2); }
+.export-opt-ic {
+  width: 40px; height: 40px; border-radius: var(--r1);
+  display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+}
+.eo-csv { background: var(--emb); }
+.eo-clip { background: var(--skyb); }
+.eo-sum  { background: var(--amb); }
+.export-opt-body { flex: 1; }
+.export-opt-title { font-size: 14px; font-weight: 600; color: var(--tx); }
+.export-opt-sub   { font-size: 11.5px; color: var(--tx3); margin-top: 2px; }
+.export-arrow { color: var(--tx3); font-size: 14px; }
+
+/* Export success badge */
+.export-done {
+  position: fixed;
+  bottom: calc(var(--nav) + var(--safe-b) + 70px);
+  left: 50%; transform: translateX(-50%) scale(.9);
+  background: var(--emb); border: 1.5px solid rgba(40,217,142,.35);
+  border-radius: var(--r2); padding: 14px 22px;
+  text-align: center; color: var(--em);
+  font-size: 13.5px; font-weight: 500;
+  z-index: 400; opacity: 0; pointer-events: none;
+  transition: all .3s var(--ease);
+  box-shadow: 0 8px 28px rgba(0,0,0,.45);
+  min-width: 220px;
+}
+.export-done.show { opacity: 1; transform: translateX(-50%) scale(1); }
+.export-done-icon { font-size: 28px; display: block; margin-bottom: 6px; }
+
+/* ═══════════════════════════════════════
+   VOICE ASSISTANT
+═══════════════════════════════════════ */
+
+/* Bouton micro dans la barre de chat */
+.mic-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--s2); border: 1.5px solid var(--bd2);
+  display: grid; place-items: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all .2s var(--ease);
+  font-size: 18px; color: var(--tx2);
+}
+.mic-btn:active { transform: scale(.92); }
+.mic-btn.listening {
+  background: var(--cob);
+  border-color: var(--co);
+  color: var(--co);
+  animation: pulse-ring .8s ease infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(232,86,79,.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(232,86,79,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,86,79,0); }
+}
+
+/* Bouton vocal flottant global (toutes pages) */
+.voice-fab {
+  position: fixed;
+  bottom: calc(var(--nav) + var(--safe-b) + 76px);
+  left: 18px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--s1); border: 1.5px solid var(--bd2);
+  display: grid; place-items: center;
+  font-size: 20px; color: var(--tx2);
+  cursor: pointer; z-index: 60;
+  box-shadow: 0 4px 18px rgba(0,0,0,.4);
+  transition: all .2s var(--ease);
+}
+.voice-fab:active { transform: scale(.93); }
+.voice-fab.listening {
+  background: var(--cob);
+  border-color: var(--co);
+  color: var(--co);
+  animation: pulse-ring .8s ease infinite;
+}
+
+/* Overlay d'ecoute */
+.voice-overlay {
+  position: fixed; inset: 0;
+  background: rgba(11,13,20,.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px;
+}
+.voice-overlay.open { display: flex; }
+
+/* Cercle animé central */
+.voice-circle {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--s2); border: 2px solid var(--bd2);
+  display: grid; place-items: center;
+  font-size: 44px;
+  position: relative;
+}
+.voice-circle.listening {
+  border-color: var(--co);
+  background: var(--cob);
+}
+.voice-circle.listening::before,
+.voice-circle.listening::after {
+  content: '';
+  position: absolute; inset: -12px;
+  border-radius: 50%;
+  border: 2px solid var(--co);
+  animation: sonar 1.6s ease-out infinite;
+}
+.voice-circle.listening::after { animation-delay: .8s; }
+@keyframes sonar {
+  0%   { transform: scale(.9); opacity: .8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Barres d'amplitude audio */
+.voice-bars {
+  display: flex; align-items: center; gap: 4px;
+  height: 40px;
+}
+.voice-bar {
+  width: 4px; border-radius: 99px;
+  background: var(--co);
+  height: 8px;
+  transition: height .1s ease;
+}
+.voice-bar:nth-child(1) { animation: bar1 .8s ease infinite; }
+.voice-bar:nth-child(2) { animation: bar2 .8s ease infinite .1s; }
+.voice-bar:nth-child(3) { animation: bar3 .8s ease infinite .2s; }
+.voice-bar:nth-child(4) { animation: bar2 .8s ease infinite .3s; }
+.voice-bar:nth-child(5) { animation: bar1 .8s ease infinite .4s; }
+.voice-bar:nth-child(6) { animation: bar3 .8s ease infinite .15s; }
+.voice-bar:nth-child(7) { animation: bar2 .8s ease infinite .25s; }
+@keyframes bar1 { 0%,100%{height:6px} 50%{height:28px} }
+@keyframes bar2 { 0%,100%{height:10px} 50%{height:36px} }
+@keyframes bar3 { 0%,100%{height:4px} 50%{height:22px} }
+
+.voice-status {
+  font-size: 16px; font-weight: 500; color: var(--tx);
+  text-align: center; min-height: 24px;
+}
+.voice-transcript {
+  font-size: 14px; color: var(--tx2); text-align: center;
+  min-height: 40px; line-height: 1.6;
+  max-width: 280px;
+  background: var(--s2); border: 1px solid var(--bd);
+  border-radius: var(--r2); padding: 12px 16px;
+  font-style: italic;
+}
+.voice-close {
+  background: var(--s2); border: 1px solid var(--bd2);
+  border-radius: 99px; color: var(--tx2);
+  font-family: var(--f); font-size: 14px;
+  padding: 10px 28px; cursor: pointer;
+  transition: all .18s;
+}
+.voice-close:active { background: var(--s3); }
+
+/* Indicateur synthese vocale */
+.speaking-badge {
+  position: fixed;
+  top: calc(var(--top) + var(--safe-t) + 10px);
+  right: 14px;
+  background: var(--emb);
+  border: 1px solid rgba(40,217,142,.3);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  color: var(--em);
+  display: none;
+  align-items: center;
+  gap: 6px;
+  z-index: 150;
+  animation: fadeUp .2s ease;
+}
+.speaking-badge.on { display: flex; }
+.spk-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--em);
+  animation: spkpulse .6s ease infinite alternate;
+}
+@keyframes spkpulse { from{opacity:.3;transform:scale(.8);} to{opacity:1;transform:scale(1.2);} }
+
+/* Bouton toggle voix dans topbar */
+.voice-toggle {
+  width: 32px; height: 32px; border-radius: 99px;
+  background: var(--s2); border: 1.5px solid var(--bd);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px;
+  transition: all .18s; flex-shrink: 0;
+  position: relative;
+}
+.voice-toggle.muted { opacity: .45; }
+.voice-toggle.muted::after {
+  content: '';
+  position: absolute;
+  width: 2px; height: 22px;
+  background: var(--co);
+  border-radius: 99px;
+  transform: rotate(45deg);
+}
+
+/* Notification commande reconnue */
+.voice-notif {
+  position: fixed;
+  top: calc(var(--top) + var(--safe-t) + 10px);
+  left: 50%; transform: translateX(-50%) translateY(-10px);
+  background: var(--s1); border: 1px solid var(--bd2);
+  border-radius: var(--r2); padding: 10px 18px;
+  font-size: 13px; color: var(--tx);
+  white-space: nowrap; z-index: 400;
+  opacity: 0; pointer-events: none;
+  transition: all .3s var(--ease);
+  box-shadow: 0 6px 24px rgba(0,0,0,.4);
+}
+.voice-notif.show {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-logo">KB</div>
+    <div class="tb-title" id="tbTitle">Accueil</div>
+    <div class="tb-month" id="tbMonth"></div>
+    <div class="voice-toggle" id="voiceToggle" title="Activer/desactiver la voix KB">&#128266;</div>
+  </div>
+  <!-- Badge "KB parle" -->
+  <div class="speaking-badge" id="speakBadge">
+    <div class="spk-dot"></div>
+    <span>KB parle...</span>
+  </div>
+  <!-- Notification commande vocale -->
+  <div class="voice-notif" id="voiceNotif"></div>
+
+  <!-- PAGES SCROLL ZONE -->
+  <div class="pages">
+
+    <!-- ════ PAGE : ACCUEIL ════ -->
+    <div class="page on" id="p-home">
+      <div class="alert-zone" id="alertZone"></div>
+
+      <!-- Hero Balance -->
+      <div class="hero">
+        <div class="hero-label">Solde disponible</div>
+        <div class="hero-value" id="hBal">0 FCFA</div>
+        <div class="hero-sub" id="hBalSub">--</div>
+        <div class="hero-pills">
+          <div class="pill">
+            <div class="pill-lbl">Revenus</div>
+            <div class="pill-val inc" id="hInc">0</div>
+          </div>
+          <div class="pill">
+            <div class="pill-lbl">Depenses</div>
+            <div class="pill-val exp" id="hExp">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stat-row">
+        <div class="stat stat-sav">
+          <div class="stat-lbl">Epargne</div>
+          <div class="stat-val sky" id="hSav">0 FCFA</div>
+        </div>
+        <div class="stat stat-tx">
+          <div class="stat-lbl">Transactions</div>
+          <div class="stat-val am" id="hNb">0 ce mois</div>
+        </div>
+      </div>
+
+      <!-- Mini chart -->
+      <div class="sh">
+        <span class="sh-title">7 derniers jours</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="miniC"></canvas>
+      </div>
+
+      <!-- Recentes -->
+      <div class="sh">
+        <span class="sh-title">Recentes</span>
+        <span class="sh-link" onclick="KB.nav('tx')">Voir tout</span>
+      </div>
+      <div class="tx-mini" id="recList">
+        <div class="empty-box">Aucune transaction pour l'instant.</div>
+      </div>
+
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ════ PAGE : TRANSACTIONS ════ -->
+    <div class="page" id="p-tx">
+
+      <!-- EXPORT BAR -->
+      <div class="export-bar">
+        <div class="export-info" id="exportInfo"><span>0</span> transaction(s)</div>
+        <button class="btn-export" onclick="KB.openExport()">
+          <span class="ex-ic">&#8681;</span> Exporter
+        </button>
+      </div>
+
+      <div class="filter-chips" id="filterChips">
+        <div class="chip on" data-f="all" onclick="KB.setFilter('all')">Tous</div>
+        <div class="chip" data-f="income" onclick="KB.setFilter('income')">Revenus</div>
+        <div class="chip" data-f="expense" onclick="KB.setFilter('expense')">Depenses</div>
+        <div class="chip" data-f="nourriture" onclick="KB.setFilter('nourriture')">&#127374; Nourriture</div>
+        <div class="chip" data-f="transport" onclick="KB.setFilter('transport')">&#128661; Transport</div>
+        <div class="chip" data-f="logement" onclick="KB.setFilter('logement')">&#127968; Logement</div>
+        <div class="chip" data-f="epargne" onclick="KB.setFilter('epargne')">&#127974; Epargne</div>
+        <div class="chip" data-f="sante" onclick="KB.setFilter('sante')">&#127973; Sante</div>
+        <div class="chip" data-f="factures" onclick="KB.setFilter('factures')">&#9889; Factures</div>
+        <div class="chip" data-f="business" onclick="KB.setFilter('business')">&#128188; Business</div>
+        <div class="chip" data-f="loisirs" onclick="KB.setFilter('loisirs')">&#127918; Loisirs</div>
+      </div>
+      <div class="tx-full" id="txFull">
+        <div class="empty-box">Aucune transaction.</div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE : ANALYSES ════ -->
+    <div class="page" id="p-charts">
+      <div class="chart-card">
+        <div class="chart-label">Depenses par categorie</div>
+        <canvas id="donut"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Revenus vs Depenses (ce mois)</div>
+        <canvas id="bar" style="max-height:180px"></canvas>
+      </div>
+      <div class="chart-card" style="margin-bottom:0">
+        <div class="chart-label">Evolution 6 mois</div>
+        <canvas id="trend" style="max-height:200px"></canvas>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ════ PAGE : EPARGNE ════ -->
+    <div class="page" id="p-save">
+      <div class="sav-hero" id="savHero"></div>
+
+      <!-- Bouton ajouter objectif -->
+      <div style="padding:14px 16px 4px">
+        <button class="btn-sheet" onclick="KB.openGoalSheet()" style="background:var(--s2);color:var(--tx);border:1.5px dashed var(--bd2);">
+          + Nouvel objectif d'epargne
+        </button>
+      </div>
+
+      <div id="goalsList"></div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ════ PAGE : ASSISTANT ════ -->
+    <div class="page" id="p-chat" style="padding-bottom:0;display:flex;flex-direction:column;overflow:hidden;">
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="bubble bkb">
+          <div class="bav">KB</div>
+          <div class="bcont">
+            <p>Bonjour ! Je suis votre assistant KB Finance. &#128075;</p>
+            <p>Dites-moi :</p>
+            <ul>
+              <li><em>j'ai depense 3000 en transport</em></li>
+              <li><em>j'ai recu 200000 de salaire</em></li>
+              <li><em>mon solde ?</em></li>
+              <li><em>conseils</em></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="chat-bar">
+        <button class="mic-btn" id="chatMic" title="Parler a KB">&#127908;</button>
+        <input type="text" class="chat-in" id="chatIn" placeholder="Tapez ou parlez a KB..."/>
+        <button class="chat-send" id="chatSend">&#10148;</button>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- FAB -->
+  <button class="fab" id="fab" aria-label="Ajouter transaction">&#43;</button>
+
+  <!-- VOICE FAB (micro global) -->
+  <button class="voice-fab" id="voiceFab" title="Commande vocale">&#127908;</button>
+
+  <!-- VOICE OVERLAY -->
+  <div class="voice-overlay" id="voiceOverlay">
+    <div style="text-align:center">
+      <div style="font-size:13px;color:var(--tx3);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase">Assistant KB</div>
+      <div style="font-size:12px;color:var(--tx3)">Reconnaissance vocale active</div>
+    </div>
+    <div class="voice-circle" id="voiceCircle">&#127908;</div>
+    <div class="voice-bars" id="voiceBars">
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+      <div class="voice-bar"></div>
+    </div>
+    <div class="voice-status" id="voiceStatus">Appuyez pour parler</div>
+    <div class="voice-transcript" id="voiceTranscript">Dites par exemple :<br><em>j'ai depense 5000 en transport</em></div>
+    <button class="voice-close" id="voiceClose">Fermer</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="nb on" data-p="home"><span class="ni">&#9672;</span>Accueil</button>
+    <button class="nb" data-p="tx"><span class="ni">&#8644;</span>Transactions</button>
+    <button class="nb" data-p="charts"><span class="ni">&#9678;</span>Analyses</button>
+    <button class="nb" data-p="save"><span class="ni">&#9671;</span>Epargne</button>
+    <button class="nb" data-p="chat"><span class="ni">&#10022;</span>Assistant</button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- ════ BOTTOM SHEET : AJOUTER TX ════ -->
+<div class="sheet-bg" id="addSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">Nouvelle transaction</div>
+      <button class="sheet-close" onclick="KB.closeAdd()">&#10005;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="type-row">
+        <button class="type-btn ti" id="tBtnI" onclick="KB.selType('income')">&#128176; Revenu</button>
+        <button class="type-btn" id="tBtnE" onclick="KB.selType('expense')">&#128184; Depense</button>
+      </div>
+      <input type="number" class="fi-big" id="qAmt" placeholder="0" inputmode="numeric"/>
+      <select class="fs" id="qCat">
+        <option value="nourriture">&#127374; Nourriture</option>
+        <option value="transport">&#128661; Transport</option>
+        <option value="logement">&#127968; Logement</option>
+        <option value="loisirs">&#127918; Loisirs</option>
+        <option value="business">&#128188; Business</option>
+        <option value="sante">&#127973; Sante</option>
+        <option value="factures">&#9889; Factures</option>
+        <option value="epargne">&#127974; Epargne</option>
+        <option value="salaire">&#128181; Salaire</option>
+        <option value="autre">&#128230; Autre</option>
+      </select>
+      <input type="text" class="fi" id="qNote" placeholder="Note (optionnel)"/>
+      <div class="row2">
+        <input type="date" class="fi" id="qDate"/>
+        <button class="btn-sheet" id="btnAdd">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BOTTOM SHEET : OBJECTIF ════ -->
+<div class="sheet-bg" id="goalSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">Nouvel objectif</div>
+      <button class="sheet-close" onclick="KB.closeGoal()">&#10005;</button>
+    </div>
+    <div class="goal-sheet-body">
+      <input type="text" class="fi" id="gName" placeholder="Nom de l'objectif (Telephone, Voyage...)"/>
+      <input type="number" class="fi-big" id="gTarget" placeholder="0" inputmode="numeric"/>
+      <div class="row2">
+        <input type="number" class="fi" id="gCur" placeholder="Deja epargne" inputmode="numeric"/>
+        <input type="date" class="fi" id="gDl"/>
+      </div>
+      <button class="btn-sheet" id="btnGoal">Creer l'objectif</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BOTTOM SHEET : EDITER TX ════ -->
+<div class="sheet-bg" id="editSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">Modifier</div>
+      <button class="sheet-close" onclick="KB.closeEdit()">&#10005;</button>
+    </div>
+    <div class="edit-sheet-body">
+      <select class="fs" id="eType">
+        <option value="income">Revenu</option>
+        <option value="expense">Depense</option>
+      </select>
+      <input type="number" class="fi-big" id="eAmt" placeholder="0" inputmode="numeric"/>
+      <select class="fs" id="eCat">
+        <option value="nourriture">Nourriture</option>
+        <option value="transport">Transport</option>
+        <option value="logement">Logement</option>
+        <option value="loisirs">Loisirs</option>
+        <option value="business">Business</option>
+        <option value="sante">Sante</option>
+        <option value="factures">Factures</option>
+        <option value="epargne">Epargne</option>
+        <option value="salaire">Salaire</option>
+        <option value="autre">Autre</option>
+      </select>
+      <input type="text" class="fi" id="eNote" placeholder="Note"/>
+      <input type="date" class="fi" id="eDate"/>
+      <button class="btn-sheet" id="eSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BOTTOM SHEET : EXPORT ════ -->
+<div class="sheet-bg" id="exportSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">&#8681; Exporter les transactions</div>
+      <button class="sheet-close" onclick="KB.closeExport()">&#10005;</button>
+    </div>
+    <!-- Infos sur la selection active -->
+    <div style="padding:0 20px 14px">
+      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--r1);padding:11px 14px;font-size:12.5px;color:var(--tx2);line-height:1.6;" id="exportSummary"></div>
+    </div>
+    <div class="export-opts">
+      <!-- Option 1: CSV Complet -->
+      <div class="export-opt" onclick="KB.exportCSV('all')">
+        <div class="export-opt-ic eo-csv">&#128202;</div>
+        <div class="export-opt-body">
+          <div class="export-opt-title">CSV Complet</div>
+          <div class="export-opt-sub">Toutes les transactions — pret pour Excel / Google Sheets</div>
+        </div>
+        <div class="export-arrow">&#8250;</div>
+      </div>
+      <!-- Option 2: CSV Filtre -->
+      <div class="export-opt" onclick="KB.exportCSV('filtered')">
+        <div class="export-opt-ic eo-csv">&#128200;</div>
+        <div class="export-opt-body">
+          <div class="export-opt-title">CSV Filtre</div>
+          <div class="export-opt-sub">Uniquement les transactions affichees actuellement</div>
+        </div>
+        <div class="export-arrow">&#8250;</div>
+      </div>
+      <!-- Option 3: CSV Mois courant -->
+      <div class="export-opt" onclick="KB.exportCSV('month')">
+        <div class="export-opt-ic eo-csv">&#128197;</div>
+        <div class="export-opt-body">
+          <div class="export-opt-title">CSV Mois courant</div>
+          <div class="export-opt-sub" id="exportMonthLabel">Transactions du mois en cours</div>
+        </div>
+        <div class="export-arrow">&#8250;</div>
+      </div>
+      <!-- Option 4: Copier -->
+      <div class="export-opt" onclick="KB.exportClipboard()">
+        <div class="export-opt-ic eo-clip">&#128203;</div>
+        <div class="export-opt-body">
+          <div class="export-opt-title">Copier dans le presse-papier</div>
+          <div class="export-opt-sub">Format CSV — a coller dans WhatsApp, Notes, etc.</div>
+        </div>
+        <div class="export-arrow">&#8250;</div>
+      </div>
+      <!-- Option 5: Resume texte -->
+      <div class="export-opt" onclick="KB.exportSummary()">
+        <div class="export-opt-ic eo-sum">&#128221;</div>
+        <div class="export-opt-body">
+          <div class="export-opt-title">Resume mensuel</div>
+          <div class="export-opt-sub">Bilan clair a partager par message ou email</div>
+        </div>
+        <div class="export-arrow">&#8250;</div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+</div>
+
+<!-- EXPORT DONE BADGE -->
+<div class="export-done" id="exportDone">
+  <span class="export-done-icon">&#9989;</span>
+  <span id="exportDoneMsg">Export reussi !</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ████████ JAVASCRIPT ████████ -->
+<script>
+'use strict';
+const KB = {};
+
+/* ─── CONSTANTES ─── */
+const CATS = {
+  nourriture:'\u{1F374}', transport:'\u{1F695}', logement:'\u{1F3E0}',
+  loisirs:'\u{1F3AE}',    business:'\u{1F4BC}',  sante:'\u{1F3E5}',
+  factures:'\u26A1',      epargne:'\u{1F3E6}',   salaire:'\u{1F4B5}',
+  autre:'\u{1F4E6}'
+};
+const PAL = ['#e8e0cc','#28d98e','#e8564f','#5a8ff0','#f0a030','#a78bfa','#34d399','#fb923c','#60a5fa'];
+const SK = { TX:'kb_tx', G:'kb_goals' };
+
+/* ─── ETAT ─── */
+let S = { tx:[], goals:[], charts:{}, editId:null, qType:'income', filter:'all', curPage:'home' };
+
+/* ─── STOCKAGE ─── */
+const load  = () => { S.tx=JSON.parse(localStorage.getItem(SK.TX)||'[]'); S.goals=JSON.parse(localStorage.getItem(SK.G)||'[]'); };
+const savTx = () => localStorage.setItem(SK.TX, JSON.stringify(S.tx));
+const savG  = () => localStorage.setItem(SK.G,  JSON.stringify(S.goals));
+
+/* ─── UTILITAIRES ─── */
+const fcfa  = n  => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
+const fd    = s  => new Date(s).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+const fdl   = s  => new Date(s).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+const uid   = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today = () => new Date().toISOString().split('T')[0];
+const ym    = () => today().slice(0,7);
+const moTx  = () => S.tx.filter(t => t.date.startsWith(ym()));
+const g     = id => document.getElementById(id);
+const esc   = s  => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ─── CALCULS ─── */
+function stats() {
+  const mo = moTx();
+  const sum = (arr, type) => arr.filter(t=>t.type===type).reduce((a,t)=>a+t.amount,0);
+  return {
+    bal  : sum(S.tx,'income') - sum(S.tx,'expense'),
+    mInc : sum(mo,'income'),
+    mExp : sum(mo,'expense'),
+    mN   : mo.length,
+    sav  : S.tx.filter(t=>t.category==='epargne').reduce((a,t)=>a+t.amount, 0)
+  };
+}
+function expByCat() {
+  return moTx().filter(t=>t.type==='expense').reduce((a,t)=>{ a[t.category]=(a[t.category]||0)+t.amount; return a; },{});
+}
+
+/* ─── NAVIGATION ─── */
+const PAGE_TITLES = { home:'Accueil', tx:'Transactions', charts:'Analyses', save:'Epargne', chat:'Assistant KB' };
+
+KB.nav = function(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(el => el.classList.remove('on'));
+  g('p-'+p).classList.add('on');
+  document.querySelectorAll('[data-p="'+p+'"]').forEach(el => el.classList.add('on'));
+  g('tbTitle').textContent = PAGE_TITLES[p] || '';
+  S.curPage = p;
+
+  // FAB visible seulement sur home et tx
+  g('fab').style.display = (p==='home'||p==='tx') ? '' : 'none';
+
+  if(p==='home')   renderHome();
+  if(p==='tx')     renderTx();
+  if(p==='charts') setTimeout(renderCharts, 80);
+  if(p==='save')   renderSave();
+  if(p==='chat')   setTimeout(() => { g('chatMsgs').scrollTop=99999; }, 50);
+};
+
+/* ─── TYPE SELECTOR ─── */
+KB.selType = function(type) {
+  S.qType = type;
+  g('tBtnI').className = 'type-btn' + (type==='income'  ? ' ti' : '');
+  g('tBtnE').className = 'type-btn' + (type==='expense' ? ' te' : '');
+};
+
+/* ─── SHEETS ─── */
+KB.openAdd = function() {
+  g('qAmt').value=''; g('qNote').value=''; g('qDate').value=today();
+  KB.selType('expense');
+  g('addSheet').classList.add('open');
+  setTimeout(() => g('qAmt').focus(), 300);
+};
+KB.closeAdd  = () => g('addSheet').classList.remove('open');
+KB.openGoalSheet = () => { g('gName').value=''; g('gTarget').value=''; g('gCur').value=''; g('gDl').value=''; g('goalSheet').classList.add('open'); };
+KB.closeGoal = () => g('goalSheet').classList.remove('open');
+KB.closeEdit = () => g('editSheet').classList.remove('open');
+
+/* ─── CRUD TX ─── */
+function addTx(tx) {
+  S.tx.unshift({ id:uid(), type:tx.type, amount:parseFloat(tx.amount),
+    category:tx.category, note:tx.note||'', date:tx.date||today(), createdAt:Date.now() });
+  savTx(); refresh(); toast('Transaction enregistree','ok');
+}
+
+KB.delTx = function(id) {
+  if(!confirm('Supprimer ?')) return;
+  S.tx = S.tx.filter(t=>t.id!==id);
+  savTx(); refresh();
+  if(S.curPage==='tx') renderTx();
+  toast('Supprimee','inf');
+};
+
+KB.openEdit = function(id) {
+  const t = S.tx.find(x=>x.id===id);
+  if(!t) return;
+  S.editId=id;
+  g('eType').value=t.type; g('eAmt').value=t.amount;
+  g('eCat').value=t.category; g('eNote').value=t.note; g('eDate').value=t.date;
+  g('editSheet').classList.add('open');
+};
+
+function saveEdit() {
+  if(!S.editId) return;
+  const amt = parseFloat(g('eAmt').value);
+  if(!amt||isNaN(amt)||amt<=0) { toast('Montant invalide','err'); return; }
+  const i = S.tx.findIndex(t=>t.id===S.editId);
+  if(i>=0) S.tx[i] = Object.assign({}, S.tx[i], {
+    type:g('eType').value, amount:amt, category:g('eCat').value,
+    note:g('eNote').value, date:g('eDate').value||today()
+  });
+  savTx(); refresh(); if(S.curPage==='tx') renderTx();
+  KB.closeEdit(); toast('Mise a jour','ok');
+}
+
+/* ─── GOALS ─── */
+function addGoal() {
+  const name=g('gName').value.trim(), target=parseFloat(g('gTarget').value);
+  const cur=parseFloat(g('gCur').value)||0, dl=g('gDl').value;
+  if(!name||!target||target<=0) { toast('Nom et montant requis','err'); return; }
+  S.goals.push({id:uid(),name,target,current:cur,deadline:dl,createdAt:Date.now()});
+  savG(); renderSave(); KB.closeGoal(); toast('Objectif cree','ok');
+}
+
+KB.delGoal = function(id) {
+  if(!confirm('Supprimer cet objectif ?')) return;
+  S.goals = S.goals.filter(x=>x.id!==id);
+  savG(); renderSave();
+};
+
+/* ─── FILTER CHIPS ─── */
+KB.setFilter = function(f) {
+  S.filter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.f===f));
+  renderTx();
+};
+
+/* ─── RENDER HOME ─── */
+function renderHome() {
+  const s = stats();
+  g('hBal').textContent  = fcfa(s.bal);
+  g('hBalSub').textContent = s.bal>=0 ? 'Solde positif ce mois' : 'Attention : solde negatif';
+  g('hInc').textContent  = fcfa(s.mInc);
+  g('hExp').textContent  = fcfa(s.mExp);
+  g('hSav').textContent  = fcfa(s.sav);
+  g('hNb').textContent   = s.mN + ' ce mois';
+
+  const now = new Date();
+  g('tbMonth').textContent = now.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+
+  renderRecent();
+  renderMini();
+  runAlerts();
+}
+
+function renderRecent() {
+  const list = g('recList');
+  const txs  = S.tx.slice(0, 5);
+  if(!txs.length) { list.innerHTML='<div class="empty-box">Aucune transaction.</div>'; return; }
+  list.innerHTML = txs.map(t => txItem(t, false)).join('');
+}
+
+function txItem(t, actions) {
+  const inc  = t.type==='income';
+  const ic   = CATS[t.category]||'\u{1F4E6}';
+  const acts = actions
+    ? '<div class="txi-acts">'
+      + '<div class="txi-btn" onclick="KB.openEdit(\''+t.id+'\')">&#9998;</div>'
+      + '<div class="txi-btn del" onclick="KB.delTx(\''+t.id+'\')">&#10005;</div>'
+      + '</div>'
+    : '';
+  return '<div class="txi">'
+    +'<div class="txi-ic '+(inc?'ii':'ie')+'">'+ic+'</div>'
+    +'<div class="txi-body"><div class="txi-cat">'+esc(t.category)+'</div>'
+    +'<div class="txi-note">'+esc(t.note||'--')+'</div></div>'
+    +'<div class="txi-right">'
+    +'<div class="txi-amt '+(inc?'inc':'exp')+'">'+(inc?'+':'-')+fcfa(t.amount)+'</div>'
+    +'<div class="txi-dt">'+fd(t.date)+'</div>'
+    +'</div>'
+    +acts+'</div>';
+}
+
+/* ─── RENDER TX PAGE ─── */
+function renderTx() {
+  const f = S.filter;
+  let txs = S.tx.slice();
+  if(f==='income'||f==='expense') txs = txs.filter(t=>t.type===f);
+  else if(f!=='all') txs = txs.filter(t=>t.category===f);
+
+  // Mettre a jour le compteur de l'export bar
+  const info = g('exportInfo');
+  if(info) {
+    const inc = txs.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+    const exp = txs.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+    info.innerHTML = '<span>' + txs.length + '</span> transaction(s)'
+      + (txs.length ? ' &nbsp;·&nbsp; <span style="color:var(--em)">+' + fcfa(inc) + '</span>'
+        + ' <span style="color:var(--co)">-' + fcfa(exp) + '</span>' : '');
+  }
+
+  const cont = g('txFull');
+  if(!txs.length) { cont.innerHTML='<div class="empty-box">Aucune transaction trouvee.</div>'; return; }
+
+  // Grouper par mois
+  const groups = {};
+  txs.forEach(t => {
+    const key = t.date.slice(0,7);
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(t);
+  });
+
+  cont.innerHTML = Object.keys(groups).sort((a,b)=>b.localeCompare(a)).map(k => {
+    const [y,m] = k.split('-');
+    const label = new Date(+y,+m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    return '<div class="month-sep">'+label+'</div>'
+      + groups[k].map(t=>txItem(t,true)).join('');
+  }).join('');
+}
+
+/* ─── RENDER CHARTS ─── */
+const cd = {
+  responsive:true, maintainAspectRatio:true,
+  plugins:{ legend:{ labels:{ color:'#7a8aaa', font:{size:11,family:'Sora'}, usePointStyle:true, padding:12 }}}
+};
+function kC(k) { if(S.charts[k]) { S.charts[k].destroy(); S.charts[k]=null; } }
+
+function renderMini() {
+  kC('mini');
+  const days=[],inc=[],exp=[];
+  for(let i=6;i>=0;i--) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    days.push(d.toLocaleDateString('fr-FR',{weekday:'narrow'}));
+    const dt=S.tx.filter(t=>t.date===ds);
+    inc.push(dt.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0));
+    exp.push(dt.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0));
+  }
+  S.charts.mini = new Chart(g('miniC'),{
+    type:'line',
+    data:{ labels:days, datasets:[
+      {label:'Revenus',data:inc,borderColor:'#28d98e',backgroundColor:'transparent',borderWidth:2,tension:.4,pointRadius:3,pointBackgroundColor:'#28d98e'},
+      {label:'Depenses',data:exp,borderColor:'#e8564f',backgroundColor:'transparent',borderWidth:2,tension:.4,pointRadius:3,pointBackgroundColor:'#e8564f'}
+    ]},
+    options: { ...cd, plugins:{ legend:{display:false} },
+      scales:{ x:{grid:{display:false},ticks:{color:'#3e4a64',font:{size:10}}}, y:{display:false} }
+    }
+  });
+}
+
+function renderCharts() {
+  kC('donut'); kC('bar'); kC('trend');
+
+  const ebc=expByCat(), labs=Object.keys(ebc), vals=Object.values(ebc);
+  if(labs.length) {
+    S.charts.donut = new Chart(g('donut'),{
+      type:'doughnut',
+      data:{ labels:labs.map(l=>(CATS[l]||'')+' '+l), datasets:[{data:vals,backgroundColor:PAL.slice(0,labs.length),borderWidth:0,hoverOffset:4}]},
+      options:{ ...cd, cutout:'58%', plugins:{ legend:{ ...cd.plugins.legend, position:'bottom' }, tooltip:{callbacks:{label:c=>' '+fcfa(c.raw)}} }}
+    });
+  }
+
+  const mo=moTx();
+  const mI=mo.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const mE=mo.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  S.charts.bar = new Chart(g('bar'),{
+    type:'bar',
+    data:{ labels:['Revenus','Depenses'], datasets:[{
+      data:[mI,mE], backgroundColor:['rgba(40,217,142,.2)','rgba(232,86,79,.2)'],
+      borderColor:['#28d98e','#e8564f'], borderWidth:2, borderRadius:8, borderSkipped:false
+    }]},
+    options:{ ...cd, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>' '+fcfa(c.raw)}} },
+      scales:{ x:{grid:{color:'#22283c'},ticks:{color:'#7a8aaa',font:{family:'Sora'}}},
+               y:{grid:{color:'#1c2032'},ticks:{color:'#7a8aaa',font:{family:'DM Mono',size:10},callback:v=>fcfa(v)}} }
+    }
+  });
+
+  const months=[]; const now=new Date();
+  for(let i=5;i>=0;i--) { const d=new Date(now.getFullYear(),now.getMonth()-i,1); months.push(d.toISOString().slice(0,7)); }
+  const mIs=months.map(m=>S.tx.filter(t=>t.type==='income' &&t.date.startsWith(m)).reduce((a,t)=>a+t.amount,0));
+  const mEs=months.map(m=>S.tx.filter(t=>t.type==='expense'&&t.date.startsWith(m)).reduce((a,t)=>a+t.amount,0));
+  const mlabs=months.map(m=>{ const p=m.split('-'); return new Date(+p[0],+p[1]-1,1).toLocaleDateString('fr-FR',{month:'short'}); });
+  S.charts.trend = new Chart(g('trend'),{
+    type:'line',
+    data:{ labels:mlabs, datasets:[
+      {label:'Revenus', data:mIs,borderColor:'#28d98e',backgroundColor:'rgba(40,217,142,.06)',fill:true,borderWidth:2,tension:.35,pointRadius:3,pointBackgroundColor:'#28d98e'},
+      {label:'Depenses',data:mEs,borderColor:'#e8564f',backgroundColor:'rgba(232,86,79,.06)',fill:true,borderWidth:2,tension:.35,pointRadius:3,pointBackgroundColor:'#e8564f'}
+    ]},
+    options:{ ...cd, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:cd.plugins.legend, tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fcfa(c.raw)}} },
+      scales:{ x:{grid:{color:'#1c2032'},ticks:{color:'#7a8aaa',font:{size:11}}},
+               y:{grid:{color:'#1c2032'},ticks:{color:'#7a8aaa',font:{family:'DM Mono',size:10},callback:v=>fcfa(v)}} }
+    }
+  });
+}
+
+/* ─── RENDER SAVE ─── */
+function renderSave() {
+  const s = stats();
+  const he = g('savHero');
+  if(S.goals.length) {
+    const mg=S.goals[0], p=Math.min(100,Math.round(s.sav/mg.target*100));
+    he.innerHTML = '<div class="sav-hero-top">'
+      +'<div><div class="sav-hero-lbl">Epargne totale</div><div class="sav-hero-val">'+fcfa(s.sav)+'</div></div>'
+      +'<div class="sav-hero-pct">'+p+'%</div></div>'
+      +'<div class="sav-hero-lbl" style="margin-bottom:8px">Objectif principal : '+esc(mg.name)+'</div>'
+      +'<div class="big-bar"><div class="big-fill'+(p>=100?' done':'')+'" style="width:'+p+'%"></div></div>';
+  } else {
+    he.innerHTML = '<div style="text-align:center;color:var(--tx3);padding:8px 0">'
+      +'<div style="font-size:28px;margin-bottom:8px">\u{1F3E6}</div>'
+      +'<div>Epargne : <strong style="color:var(--sky)">'+fcfa(s.sav)+'</strong></div>'
+      +'<div style="font-size:12px;margin-top:4px;color:var(--tx3)">Ajoutez un objectif pour suivre votre progression</div></div>';
+  }
+
+  const gl = g('goalsList');
+  if(!S.goals.length) { gl.innerHTML='<div class="empty-box">Aucun objectif d\'epargne.</div>'; return; }
+  gl.innerHTML = S.goals.map(gx => {
+    const p=Math.min(100,Math.round(gx.current/gx.target*100)), done=p>=100;
+    const msg = done?'\u{1F389} Objectif atteint !': p>=75?'\u{1F680} Presque la !': p>=50?'\u{1F44D} Bonne progression !': p>=25?'\u{1F4AA} Continuez !':'\u{1F331} Bon debut !';
+    return '<div class="goal-card">'
+      +'<div class="gc-top"><div class="gc-name">'+esc(gx.name)+'</div><button class="gc-del" onclick="KB.delGoal(\''+gx.id+'\')">&#10005;</button></div>'
+      +'<div class="gc-amts">'+fcfa(gx.current)+' / '+fcfa(gx.target)+'</div>'
+      +'<div class="sbar"><div class="sfill'+(done?' done':'')+'" style="width:'+p+'%"></div></div>'
+      +'<div class="gc-foot"><span class="gc-dl">'+(gx.deadline?'Echeance : '+fdl(gx.deadline):'')+'</span><span class="gc-pct">'+p+'%</span></div>'
+      +'<div class="gc-msg">'+msg+'</div></div>';
+  }).join('');
+}
+
+/* ─── ALERTES ─── */
+function runAlerts() {
+  const az=g('alertZone'); az.innerHTML='';
+  const s=stats(), ebc=expByCat();
+  const push=(cls,msg)=>{
+    const d=document.createElement('div'); d.className='alert '+cls;
+    d.innerHTML='<span>'+msg+'</span><button class="acls" onclick="this.parentElement.remove()">&times;</button>';
+    az.appendChild(d);
+  };
+  if(s.bal<0) push('ad','\u26A0 Solde negatif : '+fcfa(s.bal));
+  if(s.mExp>s.mInc && s.mInc>0) push('aw','\u{1F4A1} Depenses > Revenus ce mois');
+  if(ebc.transport && s.mExp>0 && ebc.transport/s.mExp>0.3) push('aw','\u{1F695} Transport > 30% du budget');
+  if(S.goals.length) {
+    const p=Math.min(100,Math.round(s.sav/S.goals[0].target*100));
+    if(p>=90&&p<100) push('ak','\u{1F3AF} Objectif a '+p+'% ! Encore un effort !');
+  }
+  if(s.bal>=0&&s.mExp<=s.mInc&&az.children.length===0&&s.mInc>0) push('ak','\u2705 Bonne gestion ce mois !');
+}
+
+/* ─── ASSISTANT NLP ─── */
+function parseMsg(msg) {
+  const l=msg.toLowerCase();
+  const am=l.match(/(\d[\d\s]*(?:[,.]\d+)?)/);
+  const amount=am?parseFloat(am[1].replace(/\s/g,'').replace(',','.')):null;
+  const isExp=/depens|paye|achete|achat|sortie|retire/.test(l);
+  const isInc=/recu|gagne|salaire|virement|entree|percu/.test(l);
+  const isBal=/solde|bilan|combien|situation|avoir/.test(l);
+  const isAdv=/conseil|aide|astuce|amelior|analyse|recommand/.test(l);
+  let cat='autre';
+  if(/transport|taxi|bus|moto|carburant|essence/.test(l))     cat='transport';
+  else if(/nourriture|manger|restaurant|courses|marche|repas/.test(l)) cat='nourriture';
+  else if(/loyer|logement|maison|appartement/.test(l))        cat='logement';
+  else if(/loisir|sortie|cinema|fete/.test(l))                cat='loisirs';
+  else if(/sante|medecin|pharmacie|hopital/.test(l))          cat='sante';
+  else if(/facture|eau|electricite|internet|telephone|abonnement/.test(l)) cat='factures';
+  else if(/epargne|economie|reserve/.test(l))                 cat='epargne';
+  else if(/salaire|business|vente|commerce/.test(l))          cat='salaire';
+  return {amount,isExp,isInc,isBal,isAdv,cat};
+}
+
+function genAdvice() {
+  const s=stats(), ebc=expByCat(), r=[];
+  if(s.bal<0) r.push('\u26A0 Solde negatif. Reduire les depenses.');
+  if(s.mExp>s.mInc) r.push('\u{1F4C9} Depenses > Revenus ce mois.');
+  const top=Object.entries(ebc).sort((a,b)=>b[1]-a[1])[0];
+  if(top) r.push('\u{1F4CA} Poste principal : '+top[0]+' ('+fcfa(top[1])+').');
+  if(s.sav>0) r.push('\u{1F3E6} Epargne totale : '+fcfa(s.sav)+'. Continuez !');
+  else r.push('\u{1F4A1} Pensez a epargner regulierement.');
+  if(ebc.transport&&s.mExp>0&&ebc.transport/s.mExp>0.25) r.push('\u{1F695} Transport > 25% du budget. A optimiser.');
+  return r.length ? r.join('\n') : '\u2705 Gestion equilibree ce mois !';
+}
+
+function appendBub(html, role) {
+  const d=document.createElement('div');
+  d.className='bubble '+(role==='kb'?'bkb':'bu');
+  d.innerHTML='<div class="bav">'+(role==='kb'?'KB':'H')+'</div><div class="bcont">'+html.replace(/\n/g,'<br>')+'</div>';
+  g('chatMsgs').appendChild(d);
+  g('chatMsgs').scrollTop=99999;
+}
+
+async function handleChat() {
+  const inp=g('chatIn'), msg=inp.value.trim();
+  if(!msg) return;
+  inp.value=''; inp.blur();
+  appendBub(esc(msg),'u');
+
+  const td=document.createElement('div');
+  td.className='bubble bkb';
+  td.innerHTML='<div class="bav">KB</div><div class="bcont"><span class="dots"><span></span><span></span><span></span></span></div>';
+  g('chatMsgs').appendChild(td); g('chatMsgs').scrollTop=99999;
+
+  await new Promise(r=>setTimeout(r,600+Math.random()*400));
+  td.remove();
+
+  const p=parseMsg(msg), s=stats(); let resp='';
+  if(p.isBal) {
+    resp='\u{1F4B0} Solde : <strong>'+fcfa(s.bal)+'</strong><br>Revenus : '+fcfa(s.mInc)+' | Depenses : '+fcfa(s.mExp);
+  } else if(p.isAdv) {
+    resp=genAdvice();
+  } else if(p.isExp && p.amount) {
+    addTx({type:'expense',amount:p.amount,category:p.cat,note:msg,date:today()});
+    resp='\u2705 Depense enregistree : <strong>-'+fcfa(p.amount)+'</strong><br>Categorie : '+p.cat+'<br>Nouveau solde : '+fcfa(stats().bal);
+  } else if(p.isInc && p.amount) {
+    addTx({type:'income',amount:p.amount,category:p.cat==='autre'?'salaire':p.cat,note:msg,date:today()});
+    resp='\u2705 Revenu enregistre : <strong>+'+fcfa(p.amount)+'</strong><br>Nouveau solde : '+fcfa(stats().bal);
+  } else if(p.amount) {
+    resp='Montant detecte : <strong>'+fcfa(p.amount)+'</strong><br>Precisez :<br>• <em>j\'ai depense '+p.amount+'...</em><br>• <em>j\'ai recu '+p.amount+'...</em>';
+  } else {
+    resp='Je n\'ai pas compris. Essayez :<br>• <em>depense 5000 en nourriture</em><br>• <em>recu 150000</em><br>• <em>mon solde</em><br>• <em>conseils</em>';
+  }
+  appendBub(resp,'kb');
+}
+
+/* ─── TOAST ─── */
+let _tt=null;
+function toast(msg, type) {
+  type=type||'inf';
+  const t=g('toast'); t.textContent=msg; t.className='toast '+type+' show';
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ─── REFRESH ─── */
+function refresh() {
+  renderHome();
+  if(S.curPage==='tx') renderTx();
+}
+
+/* ─── DEMO DATA ─── */
+function seed() {
+  if(S.tx.length>0) return;
+  const now=new Date(), y=now.getFullYear();
+  const m=String(now.getMonth()+1).padStart(2,'0');
+  const pm=now.getMonth()===0?(y-1)+'-12':y+'-'+String(now.getMonth()).padStart(2,'0');
+  [
+    {type:'income', amount:250000,category:'salaire',   note:'Salaire mensuel',       date:y+'-'+m+'-01'},
+    {type:'expense',amount:55000, category:'logement',  note:'Loyer',                 date:y+'-'+m+'-02'},
+    {type:'expense',amount:14000, category:'nourriture',note:'Courses semaine',        date:y+'-'+m+'-04'},
+    {type:'expense',amount:8500,  category:'transport', note:'Taxi + mobilite',        date:y+'-'+m+'-05'},
+    {type:'income', amount:40000, category:'business',  note:'Prestation freelance',   date:y+'-'+m+'-08'},
+    {type:'expense',amount:5500,  category:'factures',  note:'Internet mobile',        date:y+'-'+m+'-10'},
+    {type:'expense',amount:20000, category:'epargne',   note:'Mise de cote mensuelle', date:y+'-'+m+'-12'},
+    {type:'expense',amount:6500,  category:'sante',     note:'Pharmacie',              date:y+'-'+m+'-14'},
+    {type:'income', amount:200000,category:'salaire',   note:'Salaire',                date:pm+'-01'},
+    {type:'expense',amount:55000, category:'logement',  note:'Loyer',                  date:pm+'-02'},
+    {type:'expense',amount:18000, category:'nourriture',note:'Courses',                date:pm+'-06'},
+    {type:'expense',amount:9000,  category:'transport', note:'Transport',              date:pm+'-09'},
+    {type:'expense',amount:20000, category:'epargne',   note:'Epargne',               date:pm+'-15'}
+  ].forEach(d=>S.tx.push(Object.assign({id:uid(),createdAt:Date.now()},d)));
+  savTx();
+  S.goals.push({id:uid(),name:'Nouveau telephone',target:150000,current:40000,deadline:y+'-12-31',createdAt:Date.now()});
+  savG();
+}
+
+/* ═══════════════════════════════════════
+   MODULE EXPORT CSV
+═══════════════════════════════════════ */
+
+/* ── Retourne le tableau filtré courant ── */
+function getFilteredTx() {
+  const f = S.filter;
+  let txs = S.tx.slice();
+  if(f==='income'||f==='expense') txs = txs.filter(t=>t.type===f);
+  else if(f!=='all') txs = txs.filter(t=>t.category===f);
+  return txs;
+}
+
+/* ── Construire une chaîne CSV depuis un tableau de tx ── */
+function buildCSV(txs) {
+  const BOM = '\uFEFF'; // BOM UTF-8 pour Excel/Sheets
+  const HEADER = ['Date','Type','Categorie','Montant (FCFA)','Note','Solde cumulatif'];
+
+  // Calculer le solde cumulatif (ordre chrono)
+  const sorted = txs.slice().sort((a,b) => a.date.localeCompare(b.date));
+  let running = 0;
+  const rows = sorted.map(t => {
+    running += t.type==='income' ? t.amount : -t.amount;
+    return [
+      t.date,
+      t.type==='income' ? 'Revenu' : 'Depense',
+      t.category,
+      (t.type==='income' ? '' : '-') + Math.round(t.amount),
+      '"' + (t.note||'').replace(/"/g,'""') + '"',
+      Math.round(running)
+    ].join(';');
+  });
+
+  return BOM + HEADER.join(';') + '\n' + rows.join('\n');
+}
+
+/* ── Déclencher le téléchargement ── */
+function downloadCSV(csvStr, filename) {
+  const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ── Afficher le badge succès ── */
+let _exportTimer = null;
+function showExportDone(msg) {
+  const el = g('exportDone'), txt = g('exportDoneMsg');
+  txt.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_exportTimer);
+  _exportTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ── Nom de fichier avec date ── */
+function exportFilename(suffix) {
+  const now = new Date();
+  const d   = now.toISOString().slice(0,10).replace(/-/g,'');
+  return 'KB_Finance_' + suffix + '_' + d + '.csv';
+}
+
+/* ── Ouvrir / fermer la sheet export ── */
+KB.openExport = function() {
+  // Mettre à jour les infos avant ouverture
+  const filtered = getFilteredTx();
+  const all      = S.tx;
+  const mo       = S.tx.filter(t=>t.date.startsWith(today().slice(0,7)));
+  const s        = stats();
+
+  // Summary dans la sheet
+  const mLabel = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  g('exportMonthLabel').textContent = 'Transactions de ' + mLabel;
+  g('exportSummary').innerHTML =
+    '<strong style="color:var(--tx)">' + all.length + '</strong> transactions au total — '
+    + '<strong style="color:var(--em)">' + fcfa(s.mInc) + '</strong> revenus / '
+    + '<strong style="color:var(--co)">' + fcfa(s.mExp) + '</strong> depenses ce mois'
+    + '<br><span style="color:var(--tx3)">Filtre actif : '
+    + (S.filter==='all' ? 'Toutes categories' : S.filter)
+    + ' (' + filtered.length + ' ligne(s))</span>';
+
+  g('exportSheet').classList.add('open');
+};
+KB.closeExport = () => g('exportSheet').classList.remove('open');
+
+/* ── Export CSV Complet ── */
+KB.exportCSV = function(scope) {
+  let txs, suffix;
+  if(scope==='all') {
+    txs = S.tx.slice();
+    suffix = 'Complet';
+  } else if(scope==='filtered') {
+    txs = getFilteredTx();
+    suffix = 'Filtre_' + S.filter;
+  } else {
+    txs = S.tx.filter(t=>t.date.startsWith(today().slice(0,7)));
+    suffix = 'Mois_' + today().slice(0,7);
+  }
+
+  if(!txs.length) { toast('Aucune transaction a exporter', 'err'); return; }
+
+  const csv = buildCSV(txs);
+  downloadCSV(csv, exportFilename(suffix));
+  KB.closeExport();
+  showExportDone(txs.length + ' transactions exportees en CSV');
+  toast('Telechargement CSV en cours...', 'ok');
+};
+
+/* ── Copier CSV dans le presse-papier ── */
+KB.exportClipboard = async function() {
+  const txs = getFilteredTx();
+  if(!txs.length) { toast('Aucune transaction', 'err'); return; }
+  const csv = buildCSV(txs);
+  try {
+    await navigator.clipboard.writeText(csv);
+    KB.closeExport();
+    showExportDone(txs.length + ' lignes copiees !');
+    toast('CSV copie dans le presse-papier', 'ok');
+  } catch(e) {
+    // Fallback pour les navigateurs sans clipboard API
+    const ta = document.createElement('textarea');
+    ta.value = csv;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, 999999);
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    KB.closeExport();
+    showExportDone('CSV copie !');
+    toast('CSV copie dans le presse-papier', 'ok');
+  }
+};
+
+/* ── Export résumé texte lisible (WhatsApp / Email) ── */
+KB.exportSummary = function() {
+  const s   = stats();
+  const ebc = expByCat();
+  const mo  = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const topCats = Object.entries(ebc).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  let txt = '';
+  txt += '============================\n';
+  txt += '   KB FINANCE — BILAN ' + mo.toUpperCase() + '\n';
+  txt += '============================\n\n';
+  txt += 'SOLDE ACTUEL\n';
+  txt += '  ' + fcfa(s.bal) + '\n\n';
+  txt += 'CE MOIS\n';
+  txt += '  + Revenus  : ' + fcfa(s.mInc) + '\n';
+  txt += '  - Depenses : ' + fcfa(s.mExp) + '\n';
+  txt += '  = Net      : ' + fcfa(s.mInc - s.mExp) + '\n\n';
+  if(topCats.length) {
+    txt += 'TOP DEPENSES PAR CATEGORIE\n';
+    topCats.forEach(([cat,amt]) => {
+      const pct = s.mExp>0 ? Math.round(amt/s.mExp*100) : 0;
+      txt += '  ' + cat.padEnd(14) + ' ' + fcfa(amt) + '  (' + pct + '%)\n';
+    });
+    txt += '\n';
+  }
+  const savAmt = S.tx.filter(t=>t.category==='epargne').reduce((a,t)=>a+t.amount,0);
+  txt += 'EPARGNE TOTALE\n';
+  txt += '  ' + fcfa(savAmt) + '\n';
+  if(S.goals.length) {
+    const g0 = S.goals[0];
+    const pct = Math.min(100,Math.round(savAmt/g0.target*100));
+    txt += '  Objectif "' + g0.name + '" : ' + pct + '%\n';
+  }
+  txt += '\n----------------------------\n';
+  txt += 'Genere par KB Finance\n';
+  txt += today() + '\n';
+  txt += '============================\n';
+
+  // Tenter le partage natif (mobile)
+  if(navigator.share) {
+    navigator.share({ title:'Bilan KB Finance — ' + mo, text: txt })
+      .then(() => { KB.closeExport(); toast('Bilan partage', 'ok'); })
+      .catch(() => _fallbackCopyText(txt));
+  } else {
+    _fallbackCopyText(txt);
+  }
+};
+
+function _fallbackCopyText(txt) {
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0,999999);
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  KB.closeExport();
+  showExportDone('Resume copie dans le presse-papier');
+  toast('Resume copie', 'ok');
+}
+
+/* ═══════════════════════════════════════
+   ASSISTANT VOCAL — KB VOICE ENGINE
+   Web Speech API : SpeechRecognition + SpeechSynthesis
+   Langue : français (fr-FR)
+═══════════════════════════════════════ */
+const VOICE = {
+  recognition : null,   // SpeechRecognition instance
+  synthesis   : window.speechSynthesis,
+  isListening : false,
+  voiceEnabled: true,   // synthese vocale active
+  supported   : false,  // reconnaissance supportee
+  currentUtter: null,   // utterance en cours
+
+  /* ── Init reconnaissance ── */
+  init() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      this.supported = false;
+      console.warn('SpeechRecognition non supporte sur ce navigateur.');
+      return;
+    }
+    this.supported = true;
+    this.recognition = new SpeechRec();
+    this.recognition.lang = 'fr-FR';
+    this.recognition.continuous = false;
+    this.recognition.interimResults = true;
+    this.recognition.maxAlternatives = 1;
+
+    /* Resultats intermediaires + final */
+    this.recognition.onresult = (e) => {
+      let interim = '', final = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      const display = final || interim;
+      g('voiceTranscript').textContent = display || '...';
+      g('voiceTranscript').style.fontStyle = final ? 'normal' : 'italic';
+
+      if (final) {
+        g('chatIn').value = final;
+        this.stopListening();
+        // Traiter automatiquement le message
+        setTimeout(() => {
+          handleChat(final);
+        }, 400);
+      }
+    };
+
+    this.recognition.onstart = () => {
+      this.isListening = true;
+      this._setListeningUI(true);
+      g('voiceStatus').textContent = 'Ecoute en cours...';
+      g('voiceTranscript').textContent = '...';
+      g('voiceTranscript').style.fontStyle = 'italic';
+    };
+
+    this.recognition.onend = () => {
+      if (this.isListening) {
+        this.isListening = false;
+        this._setListeningUI(false);
+      }
+    };
+
+    this.recognition.onerror = (e) => {
+      this.isListening = false;
+      this._setListeningUI(false);
+      const msgs = {
+        'no-speech'       : 'Aucune voix detectee. Reessayez.',
+        'audio-capture'   : 'Micro inaccessible. Verifiez les permissions.',
+        'not-allowed'     : 'Permission microphone refusee.',
+        'network'         : 'Erreur reseau. Connexion requise.',
+        'service-not-allowed': 'Service vocal non autorise.',
+      };
+      const m = msgs[e.error] || 'Erreur vocale : ' + e.error;
+      g('voiceStatus').textContent = m;
+      toast(m, 'err');
+    };
+  },
+
+  /* ── Demarrer l'ecoute ── */
+  startListening() {
+    if (!this.supported) {
+      toast('Reconnaissance vocale non disponible sur ce navigateur', 'err');
+      this._showNotSupported();
+      return;
+    }
+    // Stopper la synthese si KB parle
+    this.stopSpeaking();
+    try {
+      this.recognition.start();
+      g('voiceOverlay').classList.add('open');
+    } catch(e) {
+      // Deja en cours
+      this.recognition.stop();
+      setTimeout(() => this.recognition.start(), 300);
+    }
+  },
+
+  /* ── Stopper l'ecoute ── */
+  stopListening() {
+    this.isListening = false;
+    try { this.recognition.stop(); } catch(e) {}
+    this._setListeningUI(false);
+    setTimeout(() => g('voiceOverlay').classList.remove('open'), 600);
+  },
+
+  /* ── KB parle (synthese vocale) ── */
+  speak(text) {
+    if (!this.voiceEnabled || !this.synthesis) return;
+    this.stopSpeaking();
+
+    // Nettoyer le HTML pour la synthese
+    const clean = text
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+      .replace(/&nbsp;/g,' ').replace(/&minus;/g,'-')
+      .replace(/\s+/g, ' ').trim();
+
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang  = 'fr-FR';
+    utter.rate  = 1.05;
+    utter.pitch = 1.0;
+    utter.volume= 0.9;
+
+    // Choisir une voix francaise si disponible
+    const voices = this.synthesis.getVoices();
+    const frVoice = voices.find(v => v.lang.startsWith('fr') && v.localService)
+                 || voices.find(v => v.lang.startsWith('fr'))
+                 || null;
+    if (frVoice) utter.voice = frVoice;
+
+    utter.onstart = () => { g('speakBadge').classList.add('on'); };
+    utter.onend   = () => { g('speakBadge').classList.remove('on'); };
+    utter.onerror = () => { g('speakBadge').classList.remove('on'); };
+
+    this.currentUtter = utter;
+    this.synthesis.speak(utter);
+  },
+
+  /* ── Stopper la synthese ── */
+  stopSpeaking() {
+    if (this.synthesis) { this.synthesis.cancel(); }
+    g('speakBadge').classList.remove('on');
+  },
+
+  /* ── Toggle voix active/muette ── */
+  toggleVoice() {
+    this.voiceEnabled = !this.voiceEnabled;
+    const btn = g('voiceToggle');
+    btn.classList.toggle('muted', !this.voiceEnabled);
+    btn.textContent = this.voiceEnabled ? '\u{1F50A}' : '\u{1F507}';
+    if (!this.voiceEnabled) this.stopSpeaking();
+    toast(this.voiceEnabled ? 'Voix KB activee' : 'Voix KB desactivee', 'inf');
+  },
+
+  /* ── UI helpers ── */
+  _setListeningUI(on) {
+    [g('voiceFab'), g('chatMic')].forEach(el => {
+      if(el) el.classList.toggle('listening', on);
+    });
+    const circle = g('voiceCircle');
+    circle.classList.toggle('listening', on);
+    circle.textContent = on ? '\u{1F534}' : '\u{1F3A4}';
+    const bars = g('voiceBars');
+    bars.style.display = on ? 'flex' : 'none';
+    if(!on) g('voiceStatus').textContent = 'Fermeture...';
+  },
+
+  /* ── Affiche notification commande reconnue ── */
+  showNotif(txt) {
+    const n = g('voiceNotif');
+    n.innerHTML = '\u{1F3A4} ' + esc(txt.slice(0, 60)) + (txt.length>60?'...':'');
+    n.classList.add('show');
+    setTimeout(() => n.classList.remove('show'), 3000);
+  },
+
+  /* ── Message si navigateur non compatible ── */
+  _showNotSupported() {
+    g('voiceStatus').textContent = 'Non disponible sur ce navigateur';
+    g('voiceTranscript').textContent = 'Utilisez Chrome sur Android ou Safari 14.5+ sur iOS pour la reconnaissance vocale.';
+    g('voiceOverlay').classList.add('open');
+  }
+};
+
+/* ── Surcharger handleChat pour accepter un msg direct (vocal) ── */
+const _origHandleChat = handleChat;
+
+/* On redefinit handleChat pour qu'il accepte un argument optionnel */
+async function handleChat(directMsg) {
+  const inp = g('chatIn');
+  const msg = (typeof directMsg === 'string' ? directMsg : inp.value).trim();
+  if (!msg) return;
+  inp.value = '';
+  inp.blur();
+
+  // Notif commande vocale si provient de la voix
+  if (typeof directMsg === 'string') VOICE.showNotif(msg);
+
+  appendBub(esc(msg), 'u');
+
+  /* Naviguer vers chat si on est ailleurs */
+  if (S.curPage !== 'chat') KB.nav('chat');
+
+  /* Typing indicator */
+  const td = document.createElement('div');
+  td.className = 'bubble bkb';
+  td.innerHTML = '<div class="bav">KB</div><div class="bcont"><span class="dots"><span></span><span></span><span></span></span></div>';
+  g('chatMsgs').appendChild(td);
+  g('chatMsgs').scrollTop = 99999;
+
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+  td.remove();
+
+  const p = parseMsg(msg), s = stats();
+  let resp = '';
+
+  if (p.isBal) {
+    resp = '\u{1F4B0} Solde : <strong>' + fcfa(s.bal) + '</strong><br>Revenus : ' + fcfa(s.mInc) + ' | Depenses : ' + fcfa(s.mExp);
+  } else if (p.isAdv) {
+    resp = genAdvice();
+  } else if (p.isExp && p.amount) {
+    addTx({type:'expense', amount:p.amount, category:p.cat, note:msg, date:today()});
+    resp = '\u2705 Depense enregistree : <strong>-' + fcfa(p.amount) + '</strong><br>Categorie : ' + p.cat + '<br>Nouveau solde : ' + fcfa(stats().bal);
+  } else if (p.isInc && p.amount) {
+    addTx({type:'income', amount:p.amount, category:p.cat==='autre'?'salaire':p.cat, note:msg, date:today()});
+    resp = '\u2705 Revenu enregistre : <strong>+' + fcfa(p.amount) + '</strong><br>Nouveau solde : ' + fcfa(stats().bal);
+  } else if (p.amount) {
+    resp = 'Montant detecte : <strong>' + fcfa(p.amount) + '</strong><br>Precisez : <em>depense</em> ou <em>recu</em> ?';
+  } else {
+    resp = 'Je n\'ai pas compris. Essayez :<br>\u2022 <em>depense 5000 en nourriture</em><br>\u2022 <em>recu 150000</em><br>\u2022 <em>mon solde</em><br>\u2022 <em>conseils</em>';
+  }
+
+  appendBub(resp, 'kb');
+
+  /* Synthese vocale de la reponse */
+  VOICE.speak(resp);
+}
+
+/* ─── INIT ─── */
+function init() {
+  load(); seed();
+
+  /* Bottom nav */
+  document.querySelectorAll('.nb').forEach(b => b.addEventListener('click', () => KB.nav(b.dataset.p)));
+
+  /* FAB */
+  g('fab').addEventListener('click', KB.openAdd);
+
+  /* Add sheet */
+  g('btnAdd').addEventListener('click', () => {
+    const amt=parseFloat(g('qAmt').value);
+    if(!amt||isNaN(amt)||amt<=0) { toast('Entrez un montant valide','err'); return; }
+    addTx({type:S.qType,amount:amt,category:g('qCat').value,note:g('qNote').value.trim(),date:g('qDate').value||today()});
+    KB.closeAdd();
+  });
+
+  /* Goal sheet */
+  g('btnGoal').addEventListener('click', addGoal);
+
+  /* Edit sheet */
+  g('eSave').addEventListener('click', saveEdit);
+
+  /* Close sheets on bg click */
+  ['addSheet','goalSheet','editSheet','exportSheet'].forEach(id => {
+    g(id).addEventListener('click', e => { if(e.target===g(id)) g(id).classList.remove('open'); });
+  });
+
+  /* Chat texte */
+  g('chatSend').addEventListener('click', () => handleChat());
+  g('chatIn').addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleChat();} });
+
+  /* ── VOICE ASSISTANT INIT ── */
+  VOICE.init();
+
+  /* Bouton micro dans la barre de chat */
+  g('chatMic').addEventListener('click', () => {
+    if (VOICE.isListening) VOICE.stopListening();
+    else VOICE.startListening();
+  });
+
+  /* FAB vocal global */
+  g('voiceFab').addEventListener('click', () => {
+    if (VOICE.isListening) VOICE.stopListening();
+    else VOICE.startListening();
+  });
+
+  /* Toggle voix KB (speaker) */
+  g('voiceToggle').addEventListener('click', () => VOICE.toggleVoice());
+
+  /* Overlay vocal — fermer */
+  g('voiceClose').addEventListener('click', () => VOICE.stopListening());
+  g('voiceOverlay').addEventListener('click', e => {
+    if (e.target === g('voiceOverlay')) VOICE.stopListening();
+  });
+
+  /* Charger les voix disponibles (asynchrone sur certains navigateurs) */
+  if (window.speechSynthesis) {
+    speechSynthesis.onvoiceschanged = () => { /* voix chargees */ };
+  }
+
+  /* Si non supporte, adapter l'UI */
+  if (!VOICE.supported) {
+    g('voiceFab').style.opacity = '.35';
+    g('chatMic').style.opacity  = '.35';
+    g('voiceFab').title = 'Reconnaissance vocale non disponible (utilisez Chrome)';
+  }
+
+  /* Enter on amount */
+  g('qAmt').addEventListener('keydown', e => { if(e.key==='Enter') g('btnAdd').click(); });
+
+  /* Escape */
+  document.addEventListener('keydown', e => {
+    if(e.key==='Escape') {
+      ['addSheet','goalSheet','editSheet','exportSheet'].forEach(id=>g(id).classList.remove('open'));
+      VOICE.stopListening();
+    }
+  });
+
+  KB.nav('home');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script>
+/* ── Enregistrement du Service Worker PWA ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[KB Finance] SW enregistre:', reg.scope);
+        // Verifier les mises a jour
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // Nouvelle version disponible
+              if (confirm('Mise a jour KB Finance disponible. Actualiser ?')) {
+                newSW.postMessage('SKIP_WAITING');
+                window.location.reload();
+              }
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[KB Finance] SW echec:', err));
+  });
+}
+/* ── Gestion des raccourcis PWA (shortcuts) ── */
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const action = params.get('action');
+  if (action === 'add-expense') {
+    setTimeout(() => { if(typeof KB !== 'undefined') KB.openAdd(); }, 500);
+  }
+  if (action === 'balance') {
+    setTimeout(() => { if(typeof KB !== 'undefined') KB.nav('home'); }, 300);
+  }
+});
+</script>
+</body>
+</html>

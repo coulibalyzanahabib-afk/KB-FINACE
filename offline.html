@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#0b0d14"/>
+<title>KB Finance — Hors ligne</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Sora',system-ui,sans-serif;background:#0b0d14;color:#e0e8f8;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;text-align:center;-webkit-font-smoothing:antialiased;}
+  .logo{width:72px;height:72px;border-radius:18px;background:#e8e0cc;
+    display:grid;place-items:center;font-weight:900;font-size:22px;color:#0b0d14;
+    margin:0 auto 28px;box-shadow:0 8px 32px rgba(232,224,204,.2);}
+  h1{font-size:22px;font-weight:700;margin-bottom:10px;}
+  p{font-size:14px;color:#7a8aaa;line-height:1.6;max-width:280px;margin:0 auto 28px;}
+  .tip{background:#171b28;border:1px solid #252c42;border-radius:14px;padding:16px 20px;
+    font-size:13px;color:#7a8aaa;max-width:300px;line-height:1.6;margin-bottom:28px;}
+  .tip strong{color:#e8e0cc;display:block;margin-bottom:6px;}
+  button{background:#e8e0cc;color:#0b0d14;border:none;border-radius:12px;
+    padding:14px 32px;font-size:14px;font-weight:700;cursor:pointer;
+    transition:all .18s;}
+  button:active{transform:scale(.97);}
+</style>
+</head>
+<body>
+  <div class="logo">KB</div>
+  <h1>Vous etes hors ligne</h1>
+  <p>KB Finance fonctionne meme sans internet.<br>Vos donnees sont sauvegardees localement.</p>
+  <div class="tip">
+    <strong>&#128161; Bon a savoir</strong>
+    Toutes vos transactions sont stockees sur votre appareil.
+    Aucune connexion n'est necessaire pour utiliser l'application.
+  </div>
+  <button onclick="window.location.href='/'">Retour a l'application</button>
+</body>
+</html>

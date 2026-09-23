@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <rect width="96" height="96" rx="21" fill="#0b0d14"/>
+  <rect x="7.68" y="7.68" width="80.64" height="80.64" rx="16.8" fill="#171b28"/>
+  <text x="50%" y="46" dominant-baseline="middle" text-anchor="middle"
+    font-family="Arial Black, sans-serif" font-size="36" font-weight="900" fill="#e8e0cc" letter-spacing="-1">KB</text>
+  <text x="50%" y="65" dominant-baseline="middle" text-anchor="middle"
+    font-family="Arial, sans-serif" font-size="15" font-weight="600" fill="#28d98e" letter-spacing="2">FINANCE</text>
+</svg>
